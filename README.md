@@ -1,6 +1,7 @@
 # VOID WARS: Fleets
 
-**Play it in your browser: https://tylenrahl.github.io/void-wars-fleets/**
+**Play it in your browser: https://tylenrahl.github.io/void-wars-fleets/**\
+_The online version has no music: the sound effects play, but the songs are not part of this repository (see Licences below)._
 
 A turn-based fleet battle game for two players at one keyboard, played in the browser. Fleets of starships, or
 of sailing ships in the sea skin *Tides of the Archipelago*, manoeuvre, fire broadsides, launch attack craft

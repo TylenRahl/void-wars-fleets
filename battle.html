@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VOID WARS: Fleets</title>
+<!-- THE GAME PAGE, VOID WARS: Fleets: the start screen, set-up and fleet builder, Rules, Settings and the battle.
+     Hotseat: both fleets at one keyboard, or against the computer. The rules are src/rules (every roll in the log);
+     src/battle/battle.js shows them and takes the players' choices. The board is one SVG whose units are centimetres,
+     the engine's units. Under `npm run dev`: http://localhost:5176/battle.html -->
+<link rel="stylesheet" href="./src/shared/pips.css">
+<link rel="stylesheet" href="./src/battle/pages.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Barlow+Condensed:wght@500;600&display=swap">
+<style>
+  :root { --bg: #06070b; --panel: #0f1118; --line: #2a2e3a; --text: #d8d4c6; --dim: #8b90a0; --gold: #c9a24a;
+    --imp: #6fb0ff; --chs: #ff6a5a; --good: #7ad07a; --bad: #ff7a6a; }
+  html, body { margin: 0; height: 100%; color: var(--text); font: 15px/1.35 'Barlow Condensed', system-ui, sans-serif; background: var(--bg); }
+  h1, h2, h3 { font-family: 'Cinzel', serif; margin: 0; }
+  h1 { font-size: 20px; color: var(--gold); letter-spacing: .06em; }
+  h2 { font-size: 16px; color: var(--gold); margin: 6px 0; }
+  h3 { font-size: 14px; color: var(--dim); margin: 10px 0 4px; }
+  button { font: inherit; color: var(--text); background: #1b1e27; border: 1px solid #3a3f4e; border-radius: 3px; padding: 4px 10px; cursor: pointer; }
+  button:hover:not(:disabled) { border-color: var(--gold); }
+  button.on { background: #3a2f14; border-color: var(--gold); color: #fff; }
+  button.big { padding: 7px 16px; font-size: 16px; background: #2a2412; border-color: var(--gold); }
+  button:disabled { opacity: .45; cursor: default; }
+  select, input { font: inherit; color: var(--text); background: #14161e; border: 1px solid #3a3f4e; border-radius: 3px; padding: 2px 4px; }
+  input[type=number] { width: 58px; }
+  .imp { color: var(--imp); } .chs { color: var(--chs); }
+  .dim { color: var(--dim); } .good { color: var(--good); } .bad { color: var(--bad); }
+
+  /* set-up */
+  #setup .pick { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; }
+  #setup .chosen { min-height: 28px; display: flex; flex-wrap: wrap; gap: 6px; }
+  #setup .chosen button::after { content: ' ×'; color: var(--dim); }
+  #setup .tables { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+  #setup .tables div { border: 1px solid var(--line); border-radius: 4px; cursor: pointer; overflow: hidden; font-size: 13px; }
+  #setup .tables div.on { border-color: var(--gold); }
+  #setup .tables img { display: block; width: 100%; discipline-ratio: 3/2; image-rendering: pixelated; }
+  #setup .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 10px 0; }
+  #setup .why { color: var(--bad); }
+  /* points used so far against what this fleet may spend */
+  #setup .used { margin: 2px 0 8px; font: 600 15px 'Barlow Condensed', sans-serif; }
+  #setup .used .bar { height: 8px; background: #1b1e27; border: 1px solid var(--line); border-radius: 2px; overflow: hidden; margin-top: 3px; }
+  #setup .used .fill { height: 100%; background: var(--gold); transition: width .15s; }
+  #setup .used.over .fill { background: var(--bad); } #setup .used.over { color: var(--bad); }
+  #setup .pick button.nofit { opacity: .45; }
+  #setup .look { display: block; width: 100%; discipline-ratio: 3/2; }
+  #setup .look.holo { background: linear-gradient(90deg, #39d0ff22 1px, transparent 1px) 0 0 / 14% 100%, linear-gradient(#39d0ff22 1px, transparent 1px) 0 0 / 100% 20%, radial-gradient(ellipse at center, #0a4a68, #03161f); }
+  #setup .look.holo-green { background: linear-gradient(90deg, #3dff8a22 1px, transparent 1px) 0 0 / 14% 100%, linear-gradient(#3dff8a22 1px, transparent 1px) 0 0 / 100% 20%, radial-gradient(ellipse at center, #0a5a34, #03180d); }
+  #setup .look.blue { background: linear-gradient(90deg, #ffffff22 1px, transparent 1px) 0 0 / 14% 100%, linear-gradient(#ffffff22 1px, transparent 1px) 0 0 / 100% 20%, #1c4f8c; }
+  #setup .tagged { display: inline-flex; gap: 2px; align-items: center; }
+  #setup .tagged select { font-size: 13px; }
+
+  /* ---- the battle screen: notched plates over a full-screen table ---- */
+  #battle { position: fixed; inset: 0; overflow: hidden; background: #000; }
+  #battle, .page {
+    --cut: 10px; --plate: linear-gradient(165deg, #1b1e27, #0f1118 55%, #0a0c12);
+    --plate-shape: polygon(var(--cut) 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% calc(100% - var(--cut)), calc(100% - var(--cut)) 100%, var(--cut) 100%, 0 calc(100% - var(--cut)), 0 var(--cut));
+    --steel: #8b90a0; --light: #c9a24a; --glow: rgba(201, 162, 74, .28); --lit: #c9a24a; --lit-2: #6e5622;
+    --drawer-w: min(25rem, 30vw); --drawer-h: min(32vh, 300px); --ink: #d8d4c6; --ink-dim: #8b90a0; --ok: #7ad07a;
+    --label: 'Barlow Condensed', 'Arial Narrow', system-ui, sans-serif; --display: 'Cinzel', Georgia, serif;
+    --accent: #c9a24a; --accent2: #e0bc62; --bg2: #0f1118; --bg3: #1b1e27; --border2: #3a3f4e; --text: #d8d4c6; --muted: #8b90a0; }
+  #battle[hidden], #setup[hidden] { display: none; }
+  /* the table fills the screen, the plates go over it; WASD and the right button reach what is under them */
+  #boardwrap { position: absolute; inset: 0; background: #000; overflow: hidden; }
+  #board { width: 100%; height: 100%; display: block; }
+  #board image.px { image-rendering: pixelated; }
+  #board .flame { animation: flame-flicker .7s ease-in-out infinite alternate; }
+  @keyframes flame-flicker { from { opacity: 1; } to { opacity: .68; } }
+  /* a ship's shields that are up: a bubble breathing slowly (battle.js shieldBubbleSvg) */
+  #board .ward { animation: ward-breathe 3s ease-in-out infinite alternate; }
+  .board-tip { position: fixed; z-index: 50; max-width: 320px; padding: 6px 10px; background: #0b0d13ee; border: 1px solid #c9a24a88; color: #e8e2d0; font-size: 13px; line-height: 1.35; pointer-events: none; }
+  @keyframes ward-breathe { from { opacity: 1; } to { opacity: .55; } }
+  /* the shield shimmer (battle.js shimmerSvg): a sweep of light over the bubble and a flare of its rim, the first fifth of every 5 s */
+  #board .ward-shimmer { animation: ward-sweep 5s linear infinite; opacity: 0; }
+  @keyframes ward-sweep { 0% { opacity: 0; transform: skewX(-20deg) translateX(0); } 3% { opacity: 1; } 18% { opacity: 1; } 22% { opacity: 0; transform: skewX(-20deg) translateX(var(--sweep)); } 100% { opacity: 0; transform: skewX(-20deg) translateX(var(--sweep)); } }
+  #board .ward-flare { animation: ward-flare 5s ease-out infinite; opacity: 0; }
+  @keyframes ward-flare { 0% { opacity: 0; } 8% { opacity: .9; } 24% { opacity: 0; } 100% { opacity: 0; } }
+  #unit-card .card-why { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; }
+  .plate { box-sizing: border-box; position: absolute; z-index: 5; background: var(--plate); clip-path: var(--plate-shape); color: var(--ink); scrollbar-color: #3a3f4e #0a0c12; scrollbar-width: thin; }
+  .plate::after { content: ''; position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(var(--light), var(--light)) calc(var(--cut) + 6px) 0 / 54px 2px no-repeat,
+      linear-gradient(var(--glow), transparent) calc(var(--cut) + 2px) 0 / 62px 7px no-repeat,
+      linear-gradient(var(--light), var(--light)) calc(100% - var(--cut) - 6px) 100% / 54px 2px no-repeat,
+      linear-gradient(transparent, var(--glow)) calc(100% - var(--cut) - 2px) 100% / 62px 7px no-repeat,
+      linear-gradient(45deg, transparent calc(50% - 1px), var(--steel) 50%, transparent calc(50% + 1px)) 0 0 / var(--cut) var(--cut) no-repeat,
+      linear-gradient(135deg, transparent calc(50% - 1px), var(--steel) 50%, transparent calc(50% + 1px)) 100% 0 / var(--cut) var(--cut) no-repeat,
+      linear-gradient(135deg, transparent calc(50% - 1px), var(--steel) 50%, transparent calc(50% + 1px)) 0 100% / var(--cut) var(--cut) no-repeat,
+      linear-gradient(45deg, transparent calc(50% - 1px), var(--steel) 50%, transparent calc(50% + 1px)) 100% 100% / var(--cut) var(--cut) no-repeat; }
+  /* top left: whose turn, the phase stepper, the score */
+  #turn-col { position: absolute; left: 0; top: 14px; z-index: 5; display: flex; flex-direction: column; gap: 10px; align-items: flex-start; pointer-events: none; }
+  #turn-col > * { pointer-events: auto; }
+  #phase-state { position: relative; min-width: 13rem; max-width: 19rem; padding: 12px 30px 12px 18px;
+    clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%); }
+  #phase-state::after { display: none; }
+  #phase-state.imp { box-shadow: inset 0 3px 0 #6fb0ff; } #phase-state.chs { box-shadow: inset 0 3px 0 #ff6a5a; }
+  #phase-turn { font: 600 12px/1.2 var(--label); letter-spacing: 3px; text-transform: uppercase; color: var(--steel); }
+  #phase-state.imp #phase-turn { color: #6fb0ff; } #phase-state.chs #phase-turn { color: #ff6a5a; }
+  #phase-name { font: 700 18px/1.15 var(--display); letter-spacing: 1.5px; color: #f2efe6; margin-top: 4px; }
+  #stepper { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; }
+  #stepper li { width: 11rem; padding: 8px 30px 8px 12px; display: flex; flex-direction: column; background: rgba(15, 17, 24, .92); color: var(--steel);
+    font: 700 16px/1.1 var(--label); letter-spacing: 2.5px; text-transform: uppercase;
+    clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 50%, calc(100% - 14px) 100%, 0 100%); transition: width .18s ease, background .18s; }
+  #stepper li .n { display: flex; align-items: center; gap: 10px; }
+  #stepper li .n::before { content: attr(data-n); flex: none; width: 22px; height: 22px; display: grid; place-items: center; border: 1px solid currentColor; font-size: 13px; letter-spacing: 0; }
+  #stepper li[data-state="done"] .n::before { content: '\2713'; background: var(--steel); color: #0a0c12; border-color: var(--steel); }
+  #stepper li[data-state="todo"] { opacity: .7; }
+  #stepper li[data-state="current"] { width: 14rem; color: #1a140b; background: linear-gradient(90deg, var(--lit-2), var(--lit)); }
+  #stepper li .step { font: 600 13px/1.2 var(--label); letter-spacing: 1px; text-transform: none; margin: 4px 0 0 32px; }
+  #score { position: relative; max-width: 19rem; padding: 10px 16px; font: 14px/1.35 var(--label); color: var(--ink-dim); }
+  #score b { color: var(--ink); }
+  /* top right: help and menu */
+  #corner { position: absolute; right: 12px; top: 12px; z-index: 6; display: flex; gap: 8px; }
+  #corner button { background: var(--plate); border: 0; border-radius: 0; padding: 7px 16px; font: 600 15px var(--label); letter-spacing: 2px; text-transform: uppercase; color: var(--ink);
+    clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px); }
+  #corner button:hover, #corner button.on { background: linear-gradient(160deg, #2a2e3a, #1b1e27); color: #fff; }
+  /* right edge: the roll log, a drawer */
+  #log-wrap { top: 58px; right: 0; width: var(--drawer-w); height: var(--drawer-h); padding: 0 0 10px; display: flex; flex-direction: column; z-index: 6;
+    background: none; clip-path: none; overflow: visible; isolation: isolate; transition: transform .26s ease; }
+  #log-wrap::before { content: ''; position: absolute; inset: 0; z-index: -1; background: var(--plate); clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, var(--cut) 100%, 0 calc(100% - var(--cut))); }
+  #log-wrap.folded { transform: translateX(100%); }
+  #log-wrap::after { clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, var(--cut) 100%, 0 calc(100% - var(--cut))); }
+  #log-wrap > :not(#log-toggle) { margin-top: 14px; }
+  #log-toggle { position: absolute; left: -30px; top: 14px; width: 30px; height: 112px; padding: 0; margin: 0; display: grid; place-items: center; z-index: 2; border: 0; border-radius: 0;
+    background: var(--plate); color: var(--steel); box-shadow: inset -3px 0 0 var(--lit); writing-mode: vertical-rl; transform: rotate(180deg);
+    font: 700 13px var(--label); letter-spacing: 3px; text-transform: uppercase; clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%); }
+  #log-toggle:hover, #log-wrap.folded #log-toggle { color: #fff; }
+  #log-scroll { flex: 1; min-height: 0; overflow-y: auto; padding: 0 16px 0 18px; font: 13.5px/1.35 'Barlow Condensed', system-ui, sans-serif; color: var(--ink); }
+  #log-wrap.folded #log-scroll { visibility: hidden; }
+  #log div { white-space: pre-wrap; padding: 2px 0; }
+  #log > div + div { border-top: 1px solid rgba(255, 255, 255, .07); }
+  #log div.head { color: var(--lit); font-family: var(--display); margin-top: 6px; }
+  #log div.roll { border-left: 3px solid var(--lit); padding-left: 8px; }
+  #log div.new { color: #fff; background: #1e1a0e; }
+  /* bottom right: "What now?" and the selected ship's buttons, growing up from the End button */
+  #side { right: 20px; bottom: 92px; width: var(--drawer-w); padding: 14px 16px 16px; overflow-y: auto; max-height: calc(100vh - 58px - var(--drawer-h) - 14px - 92px); font-size: 14.5px; }
+  #battle:has(#log-wrap.folded) #side { max-height: calc(100vh - 58px - 92px); }
+  #side button { border-radius: 0; background: #1b1e27; border: 1px solid #3a3f4e; clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px); }
+  #side button:hover:not(:disabled) { background: #232733; border-color: var(--lit); color: #fff; }
+  #side button.on { background: #3a2f14; border-color: var(--lit); color: #fff; }
+  #actions .btns { display: flex; flex-wrap: wrap; gap: 5px; margin: 5px 0; }
+  #actions table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  #actions td { padding: 2px 4px; border-bottom: 1px solid #1c1f2a; vertical-align: middle; }
+  #actions .why { color: var(--bad); font-size: 13px; }
+  #actions h3 { font: 700 13px var(--label); letter-spacing: 2px; text-transform: uppercase; color: var(--steel); margin: 10px 0 4px; }
+  #guide { padding: 0 0 8px; margin-bottom: 6px; border-bottom: 1px solid rgba(255, 255, 255, .1); font-size: 13.5px; }
+  #guide .guide-head { display: flex; justify-content: space-between; align-items: center; color: var(--steel); font: 700 13px var(--label); letter-spacing: 3px; text-transform: uppercase; }
+  #guide .guide-toggle { font-size: 11px; padding: 0 6px; }
+  #guide .guide-who { font-weight: bold; margin: 4px 0 2px; }
+  #guide .guide-text { color: var(--ink); margin: 2px 0 6px; line-height: 1.35; }
+  #guide .guide-sub, #guide .guide-none { color: var(--ink-dim); margin: 4px 0; }
+  #guide .guide-list { display: flex; flex-direction: column; gap: 3px; max-height: 180px; overflow-y: auto; }
+  #guide .guide-row { display: flex; flex-direction: column; align-items: flex-start; text-align: left; padding: 3px 8px; }
+  #guide .guide-row.sel { border-color: var(--lit); }
+  #guide .guide-unit { font-weight: bold; } #guide .guide-what { font-size: 12px; color: var(--ink-dim); }
+  /* bottom left: the selected ship */
+  #unit-card { left: 20px; bottom: 20px; width: 23rem; max-height: calc(100vh - 24rem); overflow-y: auto; padding: 14px 18px 16px; font-size: 14px; }
+  #unit-card h2 { margin: 2px 0 4px; font: 700 20px/1.15 var(--display); letter-spacing: 1.2px; }
+  #unit-card .stat { color: var(--ink-dim); } #unit-card .stat b { color: var(--ink); font-weight: 600; }
+  /* bottom right: the End button */
+  #phase-buttons { position: absolute; right: 20px; bottom: 20px; z-index: 6; display: flex; gap: 6px; }
+  #phase-buttons button { padding: 14px 34px 14px 38px; border: 0; border-radius: 0; color: #12100a; font: 700 21px var(--label); letter-spacing: 3px; text-transform: uppercase; white-space: nowrap; max-width: var(--drawer-w); overflow: hidden; text-overflow: ellipsis;
+    background: linear-gradient(160deg, var(--lit), var(--lit-2)); clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px)); }
+  #phase-buttons button:hover:not(:disabled) { background: linear-gradient(160deg, #e0bc62, #8c6a27); }
+  /* bottom centre: the latest dice */
+  #dice-strip { left: calc(23rem + 40px); right: calc(var(--drawer-w) + 40px); bottom: 20px; max-height: 30vh; overflow-y: auto; padding: .7rem 1.1rem .9rem; }
+  #dice-strip .row { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; margin: 2px 0; }
+  #dice-strip .what { font-size: 13px; color: var(--ink); line-height: 1.3; margin-top: 4px; }
+  #dice-strip .die { display: inline-grid; grid-template-columns: repeat(3, 1fr); gap: 1px; width: 30px; height: 30px; padding: 4px; box-sizing: border-box; background: #f2ead6; border-radius: 4px; border: 1px solid #0008; }
+  #dice-strip .die i { display: block; } #dice-strip .die i.pip { background: #1a140b; border-radius: 50%; }
+  #dice-strip .die.passed { box-shadow: 0 0 0 2px var(--ok); } #dice-strip .die.failed { box-shadow: 0 0 0 2px var(--bad); opacity: .75; }
+  #dice-strip .note { font: 700 15px var(--label); letter-spacing: 1.5px; color: var(--steel); margin-left: 6px; }
+  #dice-strip .note .ok { color: var(--ok); } #dice-strip .note .bad { color: var(--bad); }
+  /* with a low orbit table the bottom of the screen is the planet's edge: the dice go to the top */
+  #battle.has-low #dice-strip { top: 12px; bottom: auto; left: 21rem; right: calc(var(--drawer-w) + 44px); max-height: 22vh; }
+  /* the help box (the ? button) */
+  #help-box { top: 58px; left: 50%; transform: translateX(-50%); z-index: 9; width: min(760px, 70vw); max-height: calc(100vh - 140px); overflow-y: auto; padding: 16px 22px 18px; font-size: 14.5px; line-height: 1.45; }
+  :is(#help-box, #rules-body) h3 { color: var(--lit); font-family: var(--display); margin: 10px 0 4px; font-size: 16px; }
+  :is(#help-box, #rules-body) .tabs { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
+  :is(#help-box, #rules-body) .tabs button { font: 600 13px var(--label); letter-spacing: 1px; text-transform: uppercase; padding: 4px 10px; border-radius: 0; }
+  :is(#help-box, #rules-body) .tabs button.on { border-color: var(--lit); color: var(--lit); }
+  :is(#help-box, #rules-body) ul { margin: 4px 0 8px 18px; padding: 0; } :is(#help-box, #rules-body) li { margin: 3px 0; }
+  #help-box .close { float: right; }
+  /* a question from the rules (Brace, re-roll, Contacts): the game waits for it, the table stays in view */
+  #ask-block { position: absolute; inset: 0; z-index: 20; background: rgba(4, 6, 10, .25); }
+  #ask-block[hidden] { display: none; }
+  #ask { top: 14%; left: 50%; transform: translateX(-50%); width: min(560px, 60vw); padding: 18px 24px 20px; font-size: 15.5px; line-height: 1.4; }
+  #ask h3 { margin: 0 0 6px; color: var(--lit); font: 700 18px var(--display); letter-spacing: 1px; }
+  #ask .btns { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  #ask .btns button { border-radius: 0; padding: 8px 20px; font: 600 16px var(--label); letter-spacing: 1.5px; text-transform: uppercase; background: #1b1e27; border: 1px solid #3a3f4e; color: var(--ink); clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px); }
+  #ask .btns button:hover { border-color: var(--lit); color: #fff; }
+  #ask .btns button.primary { background: linear-gradient(160deg, var(--lit), var(--lit-2)); border-color: var(--lit); color: #12100a; }
+  #ask label { margin-right: 12px; }
+  /* the action pips (src/shared/pips.css) stand over the plates */
+  #action-pips, #pip-tip { z-index: 7; }
+  /* pips by kind: green can do, blue a special order, yellow take care */
+  #action-pips .action-pip.pip-blue { border-color: #6fb0ff; background: linear-gradient(155deg, #274f86, #142a4a); color: #e6f2ff; box-shadow: 0 3px 8px rgba(0,0,0,.55), 0 0 8px rgba(111,176,255,.4); }
+  #action-pips .action-pip.pip-blue::after { border-top-color: #6fb0ff; }
+  #action-pips .action-pip.pip-yellow { border-color: #ffd34a; background: linear-gradient(155deg, #7a6212, #3f320a); color: #fff5cc; box-shadow: 0 3px 8px rgba(0,0,0,.55), 0 0 8px rgba(255,211,74,.4); }
+  #action-pips .action-pip.pip-yellow::after { border-top-color: #ffd34a; }
+  /* a ram that needs a good All Ahead Full roll to reach */
+  #action-pips .action-pip.ram-far { border-style: dashed; border-color: #ffb04a; }
+  #pip-tip { position: absolute; z-index: 8; max-width: 300px; background: #0f1118; border: 1px solid var(--lit); padding: 6px 9px; font-size: 13px; color: var(--ink); pointer-events: none; }
+  #pip-tip b { display: block; color: var(--lit); }
+</style>
+</head>
+<body>
+<section id="title" class="page" hidden></section>
+
+<!-- The set-up page, "Choose a battle" (and, with class lists-mode, Fleet Lists): a fleet each side, the table between, the console under -->
+<section id="setup" class="page" hidden>
+  <div class="topbar"><button data-back>Back</button><div class="name" id="setup-name">Choose a battle</div></div>
+  <div class="diorama">
+    <div class="fleet blue" data-side="0"><h2 class="imp"><span id="fleet-0">The Freemen</span> <span class="dim" id="pts-0"></span></h2><div class="saved" id="saved-0"></div><div class="used" id="used-0"></div><div class="pick" id="pick-0"></div><div id="cmd-0"></div><h3>Chosen</h3><div class="chosen" id="chosen-0"></div></div>
+    <div class="centre"><div class="vs">VS</div><div class="frame" id="frame"></div><div class="mission" id="mission-name"></div><div class="sub" id="mode-text"></div></div>
+    <div class="fleet red" data-side="1"><h2 class="chs"><span id="fleet-1">The Dominion</span> <span class="dim" id="pts-1"></span></h2><div class="saved" id="saved-1"></div><div class="used" id="used-1"></div><div class="pick" id="pick-1"></div><div id="cmd-1"></div><h3>Chosen</h3><div class="chosen" id="chosen-1"></div><div class="portrait" id="portrait"></div></div>
+  </div>
+  <div class="console">
+    <div>
+      <div class="modes"><button data-mode="clash">Cruiser Duel</button><button data-mode="fleet">Fleet Engagement</button>
+      <button data-mode="bait">The Lure</button><button data-mode="corsairs">The Corsairs</button><button data-mode="surprise">Surprise Attack</button>
+      <button data-mode="blockade">Running the Cordon</button><button data-mode="convoy">Convoy</button><button data-mode="assault">Planetary Assault</button>
+      <button data-mode="escalating">Rising Engagement</button><button data-mode="worldbreak">Worldbreak</button></div>
+      <div class="row" id="fleet-opts">
+        <label>Points <select id="limit"><option>500</option><option>750</option><option selected>1000</option><option>1500</option><option>2000</option></select></label>
+        <label id="rounds-label">Game length <select id="rounds"><option value="inf">until a fleet is destroyed or disengages</option><option value="8">8 turns</option><option value="6">6 turns</option></select></label>
+      </div>
+      <div class="row" id="scenario-opts" hidden></div>
+    </div>
+    <div class="tables-col"><h3>Table</h3><div class="tables" id="tables"></div></div>
+    <div class="opts-col">
+      <div class="row">
+        <span>Style</span><button data-style="sprite">Sprite</button><button data-style="svg">SVG</button>
+        <label>Dice seed <input type="number" id="seed" value="1"></label>
+      </div>
+      <div class="row">
+        <label>Celestial phenomena <select id="zone"><option value="none">none (Cruiser Duel)</option><option value="roll">roll a battlezone</option>
+          <option value="1">Flare region</option><option value="2">Mercurial zone</option><option value="3">Inner biosphere</option><option value="4">Primary biosphere</option><option value="5">Outer reaches</option><option value="6">Deep space</option></select></label>
+        <label>Brace for Impact! <select id="brace"><option value="ask">ask each time</option><option value="crippled">brace when crippled</option><option value="never">never</option></select></label>
+        <label>Cinematic zoom <select id="cine"><option value="on">on</option><option value="off">off</option></select></label>
+        <label>Re-rolls <select id="reroll"><option value="ask">ask each time</option><option value="always">use on every failed test</option><option value="never">never</option></select></label>
+        <label>Computer plays <select id="computer"><option value="none">nobody (hotseat)</option><option value="b">the second fleet</option><option value="a">the first fleet</option><option value="both">both fleets</option></select></label>
+      </div>
+    </div>
+    <div class="go"><button id="start">To battle</button><span class="why" id="why"></span></div>
+  </div>
+</section>
+
+<section id="rules" class="page" hidden>
+  <div class="topbar"><button data-back>Back</button><div class="name">Rules</div></div>
+  <div class="page-body" id="rules-body"></div>
+</section>
+
+<section id="settings" class="page" hidden>
+  <div class="topbar"><button data-back>Back</button><div class="name">Settings</div></div>
+  <div class="page-body" id="settings-body"></div>
+</section>
+
+<section id="battle" hidden>
+  <!-- THE BATTLE SCREEN: the table under everything, plates over its edges — turn card and phase stepper top left, help
+       and menu top right, the roll log a drawer on the right, "What now?" and the ship's buttons under it, the big gold
+       End button bottom right, the ship card bottom left, the latest dice bottom centre. -->
+  <div id="boardwrap"><svg id="board" viewBox="-2 -2 184 124" preserveAspectRatio="xMidYMid meet"><g id="board-static"></g><g id="board-dyn"></g><g id="board-ghost"></g><g id="board-fx"></g></svg></div>
+  <div id="turn-col">
+    <div id="phase-state" class="plate"><div id="phase-turn"></div><div id="phase-name"></div></div>
+    <ol id="stepper"></ol>
+    <div id="score" class="plate"></div>
+  </div>
+  <div id="corner">
+    <button id="b-sound" title="Sound on or off (M)">Sound</button>
+    <button id="b-help" title="How to play: the turn, moving, shooting">?</button>
+    <button id="b-menu" title="Leave the battle and go back to the start screen">Menu</button>
+  </div>
+  <footer id="log-wrap" class="plate">
+    <button id="log-toggle" title="Show or hide the roll log">Roll log</button>
+    <div id="log-scroll"><div id="log"></div></div>
+  </footer>
+  <aside id="side" class="plate">
+    <div id="guide"></div>
+    <div id="actions"></div>
+  </aside>
+  <div id="unit-card" class="plate" hidden></div>
+  <div id="dice-strip" class="plate" hidden></div>
+  <div id="phase-buttons"></div>
+  <div id="help-box" class="plate" hidden></div>
+  <div id="ask-block" hidden><div id="ask" class="plate"></div></div>
+</section>
+<div id="over" hidden><div id="over-text"></div></div>
+<script type="module" src="./src/battle/battle.js"></script>
+</body>
+</html>

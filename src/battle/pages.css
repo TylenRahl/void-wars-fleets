@@ -1,0 +1,195 @@
+/* THE PAGES OF battle.html: the start screen, the set-up page (a fleet card each side of the table choice), Fleet Lists,
+   Rules, Settings, the end-of-battle card, the blast doors and the Space / Sea toggle, in blue-grey and gold.
+   Loaded by battle.html; the classes are written by battle.js, startScreen.js, settingsPage.js and blastDoors.js. */
+#title[hidden], #rules[hidden], #settings[hidden] { display: none; }
+.page { position: fixed; inset: 0; overflow: hidden; background: radial-gradient(ellipse at 50% 30%, #1b2233, #0a0c12 62%, #05060a); }
+.topbar { display: flex; align-items: center; gap: 14px; padding: 10px 16px; background: linear-gradient(#1b1e27, #0f1118); border-bottom: 1px solid var(--line); }
+.topbar .name { font: 700 22px var(--display); letter-spacing: 4px; color: var(--gold); text-transform: uppercase; }
+.topbar button { font: 600 15px var(--label); letter-spacing: 2px; text-transform: uppercase; }
+
+/* ---- start ---- */
+#title { background: #000; }
+.sb-space, .sb-space svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.sb-centre { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 16px; box-sizing: border-box; isolation: isolate; }
+.sb-centre::before { content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none; opacity: 0; transition: opacity 1.5s; background: radial-gradient(ellipse at 50% 45%, #1a2638, #0a0d13 55%, #000 80%); }
+.sb-centre.sb-dark::before { opacity: 1; }
+.sb-title { font: 700 clamp(38px, 7.5vw, 96px)/1 var(--display); letter-spacing: 6px; text-align: center; color: #e8e2d0; text-shadow: 0 0 30px rgba(201, 162, 74, .55), 0 4px 0 #000; }
+.sb-title em { display: block; font-style: normal; color: var(--gold); font-size: .62em; letter-spacing: .34em; margin-right: -.34em; }
+.sb-subtitle { font: 500 13px var(--label); letter-spacing: 6px; color: #d8d4c6; margin: 12px 0 14px; text-transform: uppercase; text-align: center; text-shadow: 0 1px 3px #000, 0 0 8px #000; }
+.sb-phase { font: 600 13px var(--label); letter-spacing: 4px; text-transform: uppercase; margin: -6px 0 14px; padding: 3px 12px; border-radius: 20px; background: rgba(0, 0, 0, .55); color: #ffcf3a; transition: color 1s; }
+.sb-phase.dark { color: var(--imp); }
+.sb-press { font: 600 20px var(--label); letter-spacing: 6px; text-transform: uppercase; color: #e8e2d0; text-shadow: 0 1px 3px #000, 0 0 10px #000; margin-top: 18px; animation: sb-press 2.4s ease-in-out infinite; }
+@keyframes sb-press { 0%, 100% { opacity: 1; } 50% { opacity: .25; } }
+@media (prefers-reduced-motion: reduce) { .sb-press { animation: none; } }
+.sb-nav { display: flex; flex-direction: column; gap: 6px; width: min(340px, 100%); }
+.sb-btn { box-sizing: border-box; display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 10px 14px; font: 600 18px var(--label); letter-spacing: 3px; text-transform: uppercase; color: var(--text); background: rgba(15, 17, 24, .85); border: 1px solid #3a3f4e; border-radius: 0; cursor: pointer; text-align: left; text-decoration: none; }
+.sb-btn.primary { border-color: var(--gold); color: #fff; }
+.sb-btn:hover, .sb-btn:focus-visible { background: #3a2f14; color: #fff; border-color: var(--gold); outline: none; }
+.sb-btn-note { font: 400 11px 'Barlow Condensed', sans-serif; letter-spacing: 1px; opacity: .65; text-transform: none; }
+
+/* ---- Battle and Fleet Lists: a fleet card each side of the table ---- */
+#setup { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; }
+#setup .diorama { display: grid; grid-template-columns: minmax(0, 1fr) minmax(220px, 300px) minmax(0, 1fr); gap: 14px; padding: 12px 16px; min-height: 0; }
+#setup .fleet { position: relative; overflow-y: auto; min-height: 0; background: var(--plate); clip-path: var(--plate-shape); border: 0; border-radius: 0; padding: 12px 16px; }
+#setup .fleet h2 select { font: inherit; color: inherit; background: transparent; border: 0; border-bottom: 1px solid currentColor; padding: 0 2px; cursor: pointer; }
+#setup .fleet h2 select option { color: #e8e4d8; background: #10131b; }
+#setup .fleet.blue { box-shadow: inset 0 3px 0 var(--imp); } #setup .fleet.red { box-shadow: inset 0 3px 0 var(--chs); }
+#setup .centre { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; text-align: center; min-height: 0; }
+#setup .vs { font: 700 42px var(--display); color: var(--gold); text-shadow: 0 0 18px rgba(201, 162, 74, .5); }
+#setup .frame { width: 100%; discipline-ratio: 3/2; border: 2px solid var(--gold); overflow: hidden; background: #000; }
+#setup .frame img, #setup .frame .look { display: block; width: 100%; height: 100%; object-fit: cover; }
+#setup .mission { font: 700 18px var(--display); letter-spacing: 2px; color: #f2efe6; text-transform: uppercase; }
+#setup .sub { font-size: 14px; color: var(--dim); overflow-y: auto; }
+#setup .console { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, 1.1fr); gap: 16px; padding: 10px 16px; background: linear-gradient(#141720, #0a0c12); border-top: 1px solid var(--line); max-height: 36vh; overflow-y: auto; }
+#setup .console h3 { font: 700 13px var(--label); letter-spacing: 2px; text-transform: uppercase; margin: 0 0 5px; }
+#setup .modes { display: flex; flex-wrap: wrap; gap: 5px; }
+#setup .console .row { margin: 6px 0; gap: 8px 12px; }
+#setup .tables { max-height: 25vh; overflow-y: auto; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
+#setup .go { grid-column: 1 / -1; display: flex; align-items: center; gap: 12px; }
+#setup .go #start { padding: 10px 40px; border: 0; border-radius: 0; color: #12100a; font: 700 20px var(--label); letter-spacing: 3px; text-transform: uppercase; background: linear-gradient(160deg, var(--lit), var(--lit-2)); clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px)); }
+#setup .go #start:hover:not(:disabled) { background: linear-gradient(160deg, #e0bc62, #8c6a27); }
+.saved { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 4px 0 8px; }
+.saved input { width: 11rem; }
+/* each card sweeps in from its own side, the middle thumps down */
+#setup.enter .fleet.blue { animation: sweep-left .85s cubic-bezier(.2, .8, .3, 1) both; }
+#setup.enter .fleet.red { animation: sweep-right .85s cubic-bezier(.2, .8, .3, 1) .1s both; }
+#setup.enter .frame { animation: spin-up .8s cubic-bezier(.2, .8, .3, 1) .35s both; }
+#setup.enter .vs { animation: thump .45s ease-in .95s both; }
+#setup.enter .console { animation: rise .5s cubic-bezier(.2, .8, .3, 1) .5s both; }
+@keyframes sweep-left { 0% { opacity: 0; transform: translateX(-70vw) rotate(-8deg); } 65% { opacity: 1; transform: translateX(18px) rotate(2deg); } 100% { opacity: 1; transform: none; } }
+@keyframes sweep-right { 0% { opacity: 0; transform: translateX(70vw) rotate(8deg); } 65% { opacity: 1; transform: translateX(-18px) rotate(-2deg); } 100% { opacity: 1; transform: none; } }
+@keyframes spin-up { from { opacity: 0; transform: rotate(-90deg) scale(.3); } 75% { opacity: 1; transform: rotate(4deg) scale(1.04); } to { opacity: 1; transform: none; } }
+@keyframes thump { from { opacity: 0; transform: scale(3); } 60% { opacity: 1; transform: scale(.9); } to { opacity: 1; transform: none; } }
+@keyframes rise { from { opacity: 0; transform: translateY(60%); } to { opacity: 1; transform: none; } }
+/* Fleet Lists is the same page asking only for the points (#setup.lists-mode) */
+#setup.lists-mode :is(.modes, #scenario-opts, #rounds-label, .tables-col, .opts-col, #start, .frame, .vs) { display: none; }
+#setup.lists-mode .console { grid-template-columns: minmax(0, 1fr); }
+
+/* ---- Rules and Settings ---- */
+#rules, #settings { display: flex; flex-direction: column; }
+.page-body { flex: 1; min-height: 0; overflow-y: auto; box-sizing: border-box; width: min(860px, 100%); margin: 0 auto; padding: 18px 16px 30px; font-size: 16px; line-height: 1.45; }
+#rules-body .close { display: none; }
+.set-row { display: grid; grid-template-columns: 11rem 7rem minmax(0, 1fr); gap: 6px 14px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.set-name { font: 600 17px var(--label); letter-spacing: 2px; text-transform: uppercase; }
+.set-chips { display: flex; gap: 4px; }
+.set-volume { display: flex; gap: 10px; align-items: center; } .set-volume input { flex: 1; padding: 0; accent-color: var(--gold); } .set-volume span { width: 3rem; text-align: right; }
+.set-note { grid-column: 1 / -1; color: var(--dim); font-size: 14px; }
+
+/* ---- the end of the battle, over the table so it can be looked at ---- */
+#over { position: fixed; inset: 0; z-index: 30; display: grid; place-items: center; background: rgba(4, 6, 10, .6); }
+#over[hidden] { display: none; }
+#over-text { box-sizing: border-box; width: min(620px, calc(100% - 32px)); padding: 26px 30px 28px; text-align: center; font-size: 17px; background: linear-gradient(165deg, #1b1e27, #0f1118 55%, #0a0c12); border-top: 3px solid var(--gold); }
+#over-text h1 { font-size: 32px; margin-bottom: 10px; }
+
+@media (max-width: 800px) {
+  #setup { display: block; overflow-y: auto; }
+  #setup .diorama, #setup .console { display: block; max-height: none; }
+  #setup .fleet { margin-bottom: 12px; overflow: visible; }
+  #setup .console > * { margin-bottom: 12px; }
+  .set-row { grid-template-columns: 1fr; }
+}
+
+@keyframes df-door-left { from { transform: translateX(0); } to { transform: translateX(-102%); } }
+@keyframes df-door-right { from { transform: translateX(0); } to { transform: translateX(102%); } }
+@keyframes df-door-shut-left { from { transform: translateX(-102%); } 85% { transform: translateX(1%); } to { transform: translateX(0); } }
+@keyframes df-door-shut-right { from { transform: translateX(102%); } 85% { transform: translateX(-1%); } to { transform: translateX(0); } }
+.battle-doors { --display: 'Cinzel', Georgia, serif; }
+/* THE BLAST DOORS (blastDoors.js).
+   Each door: a dark frame of riveted steel, two recessed plates, ribs across them, a hazard-striped
+   meeting edge with interlocking teeth (the left door's teeth stand proud and sit in the right
+   door's notches), a warning lamp, a stencil, and HALF a cog-and-skull seal on the meeting edge.
+   Everything inside a door is placed from the meeting edge, so the right door is the left one
+   mirrored. The doors overlap by 1% of the window, so the right door's half of the seal is set in
+   by that much (1.98% of its own width) to meet the left door's. */
+.battle-doors { position: fixed; inset: 0; z-index: 1000; overflow: hidden; pointer-events: auto; }
+.battle-doors .df-door { --steel: #4b4740; --steel-hi: #6d675c; --steel-lo: #2a2723; --rivet: radial-gradient(circle at 35% 35%, #9b9384 0 1.5px, #3b3730 2.5px, transparent 3.5px);
+  position: absolute; top: 0; bottom: 0; width: 50.5%; overflow: hidden;
+  background:
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, .18) 0 1px, transparent 1px 7px),
+    linear-gradient(180deg, var(--steel-hi), var(--steel) 18%, var(--steel-lo) 100%);
+  box-shadow: inset 0 0 60px rgba(0, 0, 0, .7), inset 0 0 0 14px #24211d, inset 0 0 0 16px #615a4f; }
+/* the left door is 14px wider: its teeth, which lie over the right door's edge */
+.battle-doors .df-door.left { left: 0; width: calc(50.5% + 14px); animation: df-door-shut-left .7s cubic-bezier(.5, 0, .9, .6) both; z-index: 2; }
+.battle-doors .df-door.right { right: 0; animation: df-door-shut-right .7s cubic-bezier(.5, 0, .9, .6) both; }
+.battle-doors.open .df-door.left { animation: df-door-left 1.1s cubic-bezier(.6, 0, .3, 1) both; }
+.battle-doors.open .df-door.right { animation: df-door-right 1.1s cubic-bezier(.6, 0, .3, 1) both; }
+/* the window jolts as they meet */
+.battle-doors.shut { animation: df-door-jolt .32s ease-out both; }
+@keyframes df-door-jolt { 0% { transform: translate(0, 0); } 20% { transform: translate(-6px, 3px); } 40% { transform: translate(5px, -2px); }
+  60% { transform: translate(-3px, 1px); } 80% { transform: translate(2px, 0); } 100% { transform: translate(0, 0); } }
+
+/* two recessed plates, each with a ring of rivets just inside its rim */
+.battle-doors .door-plate { position: absolute; left: 40px; right: 84px; border-radius: 3px;
+  background: var(--rivet) 0 0 / 26px 26px, linear-gradient(160deg, #57524a, #35312c 70%);
+  box-shadow: inset 0 3px 6px rgba(0, 0, 0, .7), inset 0 -2px 0 rgba(255, 255, 255, .08), 0 1px 0 rgba(255, 255, 255, .1); }
+.battle-doors .door-plate.top { top: 40px; height: calc(50% - 150px); }
+.battle-doors .door-plate.bottom { bottom: 40px; height: calc(50% - 150px); }
+.battle-doors .df-door.right .door-plate { left: 70px; right: 40px; }
+/* ribs across the door, between and over the plates */
+.battle-doors .door-ribs { position: absolute; inset: 0;
+  background: repeating-linear-gradient(180deg, transparent 0 calc(25% - 9px), #2b2824 calc(25% - 9px) calc(25% - 7px), #6a6357 calc(25% - 7px) calc(25% - 5px), #3c3832 calc(25% - 5px) 25%);
+  opacity: .85; }
+/* the meeting edge: hazard stripes; the left door's teeth stand proud of it */
+.battle-doors .door-edge { position: absolute; top: 0; bottom: 0; width: 26px;
+  background: repeating-linear-gradient(135deg, #e8c040 0 14px, #1a1714 14px 28px);
+  box-shadow: inset 0 0 8px rgba(0, 0, 0, .6); }
+.battle-doors .df-door.left .door-edge { right: 0; width: 40px;
+  clip-path: polygon(0 0, 65% 0, 65% 4%, 100% 6%, 100% 14%, 65% 16%, 65% 24%, 100% 26%, 100% 34%, 65% 36%, 65% 44%, 100% 46%, 100% 54%,
+    65% 56%, 65% 64%, 100% 66%, 100% 74%, 65% 76%, 65% 84%, 100% 86%, 100% 94%, 65% 96%, 65% 100%, 0 100%); }
+.battle-doors .df-door.right .door-edge { left: 0; }
+/* a warning lamp near the top, red while they run, flashing amber as they part */
+.battle-doors .door-lamp { position: absolute; top: 70px; width: 26px; height: 26px; border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, #ffb0a0, #e0301a 45%, #5a0c06 75%); box-shadow: 0 0 0 4px #1d1a17, 0 0 18px 4px rgba(255, 60, 30, .7);
+  animation: df-lamp .35s steps(2) infinite; }
+.battle-doors .df-door.left .door-lamp { right: 74px; }
+.battle-doors .df-door.right .door-lamp { left: 60px; }
+.battle-doors.open .door-lamp { background: radial-gradient(circle at 40% 35%, #fff0b0, #e8b020 45%, #5a3c06 75%); box-shadow: 0 0 0 4px #1d1a17, 0 0 22px 6px rgba(255, 190, 40, .8); }
+@keyframes df-lamp { 0% { filter: brightness(1.3); } 100% { filter: brightness(.55); } }
+/* stencilled, low on each door: BAY | 40 */
+.battle-doors .door-stencil { position: absolute; bottom: 78px; font: 400 64px/1 var(--display); letter-spacing: 8px; color: rgba(232, 192, 64, .55);
+  text-shadow: 0 2px 0 rgba(0, 0, 0, .5); }
+.battle-doors .df-door.left .door-stencil { right: 84px; }
+.battle-doors .df-door.right .door-stencil { left: 70px; }
+/* the seal: a cog with a skull, centred on the meeting edge, so each door carries half */
+.battle-doors .door-seal { position: absolute; top: 50%; width: 240px; height: 240px; margin-top: -120px; border-radius: 50%;
+  background:
+    radial-gradient(circle, #2a2622 0 52%, transparent 53%),
+    radial-gradient(circle, #b08d45 0 56%, #3a332a 57% 60%, transparent 61%),
+    repeating-conic-gradient(#8a7040 0 7.5deg, transparent 7.5deg 15deg);
+  -webkit-mask: radial-gradient(circle, #000 0 70%, transparent 71%); mask: radial-gradient(circle, #000 0 70%, transparent 71%);
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, .7)); }
+.battle-doors .df-door.left .door-seal { right: -106px; }
+.battle-doors .df-door.right .door-seal { left: calc(1.98% - 120px); }
+.battle-doors .door-skull { position: absolute; left: 50%; top: 50%; width: 76px; height: 84px; margin: -46px 0 0 -38px;
+  background:
+    radial-gradient(ellipse 11px 13px at 30% 42%, #2a2622 98%, transparent),
+    radial-gradient(ellipse 11px 13px at 70% 42%, #2a2622 98%, transparent),
+    radial-gradient(ellipse 5px 8px at 50% 62%, #2a2622 98%, transparent),
+    repeating-linear-gradient(90deg, #d8cdb0 0 7px, #2a2622 7px 9px) 0 100% / 100% 22% no-repeat,
+    radial-gradient(ellipse 50% 46% at 50% 40%, #e6dcc0 98%, transparent);
+  border-radius: 45% 45% 30% 30%; }
+/* a display rule on .row would otherwise beat the hidden attribute */
+#setup .row[hidden] { display: none; }
+#setup .tables, #setup .console, #setup .fleet { scrollbar-color: #3a3f4e #0a0c12; scrollbar-width: thin; }
+/* building one fleet at a time, the other being empty is no fault */
+#setup.lists-mode .go { display: none; }
+
+/* Fleet Lists: one builder, and in place of the second a picture of the fleet it makes (battle.js portraitHtml); page colours, gold not red */
+#setup .portrait { display: none; }
+#setup.lists-mode .fleet.red > :not(.portrait) { display: none; }
+#setup.lists-mode .portrait { display: block; }
+#setup.lists-mode .fleet.red { box-shadow: inset 0 3px 0 var(--gold); }
+.portrait h2 { color: var(--gold); }
+.portrait .ptotal { font: 600 17px var(--label); margin: 2px 0 8px; } .portrait .ptotal.over { color: var(--bad); }
+.portrait .pgroup { display: flex; flex-wrap: wrap; gap: 8px; }
+.portrait .pship { margin: 0; width: 118px; text-align: center; font-size: 13px; line-height: 1.2; background: rgba(27, 30, 39, .6); border: 1px solid var(--line); padding: 4px; }
+.portrait .pship.esc { width: 84px; }
+.portrait .pship img { display: block; width: 100%; discipline-ratio: 1; object-fit: contain; }
+.portrait .pship img.px { image-rendering: pixelated; }
+.portrait .pcmd { display: block; color: var(--gold); font-weight: 600; }
+
+/* THE SKIN TOGGLE, top left of the start screen (Tides of the Archipelago): Space or Sea */
+.sb-skin { position: fixed; top: 16px; left: 16px; z-index: 30; display: flex; border: 1px solid rgba(201, 162, 74, .6); border-radius: 999px; overflow: hidden; background: rgba(10, 14, 20, .7); }
+.sb-skin button { font: 600 14px var(--label); letter-spacing: 3px; text-transform: uppercase; color: #cfc8b4; background: none; border: 0; padding: 8px 16px; cursor: pointer; }
+.sb-skin button.on { background: var(--gold); color: #10141a; }
+.sb-skin button:focus-visible { outline: 2px solid #fff; outline-offset: -2px; }

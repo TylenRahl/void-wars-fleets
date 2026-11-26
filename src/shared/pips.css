@@ -1,0 +1,168 @@
+/* The look of the action pips (src/shared/actionPips.js), loaded by battle.html. They need
+   --label, --accent, --accent2, --bg2, --bg3, --border2, --text and --muted from the page. */
+
+/* ---- THE ACTION PIPS -------------------------------------------
+   Each action a bobbing green tag over the thing it is done to — src/shared/actionPips.js
+   places them with a transform. Kept under the roll-off and first-turn cards (z-index 7 and 6)
+   and the dice (8): a pip is never over a question the game is asking.
+   Green means "you can press this". */
+#action-pips { position: absolute; inset: 0; z-index: 4; pointer-events: none; overflow: hidden; }
+#action-pips.hidden { display: none; }
+#action-pips .action-pip {
+  position: absolute; left: 0; top: 0;
+  pointer-events: auto;
+  display: flex; align-items: center; gap: .3rem;
+  padding: .22rem .6rem .22rem .38rem;
+  border-radius: 999px;
+  border: 2px solid #6fd069;
+  background: linear-gradient(155deg,
+    color-mix(in srgb, #5fbf5a 48%, var(--bg3)),
+    color-mix(in srgb, #5fbf5a 22%, var(--bg2)));
+  color: #eaffe6;
+  font-family: var(--label); font-size: 13px; font-weight: 700; letter-spacing: .4px;
+  text-transform: uppercase; white-space: nowrap;
+  cursor: pointer;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, .55), 0 0 8px rgba(111, 208, 105, .35);
+}
+/* The bob is on the inside, so it never fights the transform that places the pip. */
+#action-pips .action-pip > * { animation: pip-bob 1.6s ease-in-out infinite; }
+#action-pips .action-pip:hover > * { animation-play-state: paused; }
+@keyframes pip-bob { 50% { transform: translateY(-2px); } }
+/* The tail pointing down at the thing. */
+#action-pips .action-pip::after {
+  content: ''; position: absolute; left: 50%; bottom: -8px; transform: translateX(-50%);
+  border: 6px solid transparent; border-top-color: #6fd069; border-bottom: 0;
+}
+#action-pips .action-pip:hover {
+  border-color: var(--accent2);
+  background: linear-gradient(155deg,
+    color-mix(in srgb, var(--accent) 40%, var(--bg3)),
+    color-mix(in srgb, var(--accent) 16%, var(--bg2)));
+  color: #fff6dc;
+}
+#action-pips .action-pip:hover::after { border-top-color: var(--accent2); }
+#action-pips .action-pip:focus-visible { outline: 2px solid var(--accent2); outline-offset: 2px; }
+/* Gun pips. The one picked is lit in the accent and stops bobbing; one that has fired is grey;
+   one held back by a rule is dimmed and still says why on hover. */
+#action-pips .action-pip.is-picked {
+  border-color: var(--accent2);
+  background: linear-gradient(155deg,
+    color-mix(in srgb, var(--accent) 55%, var(--bg3)),
+    color-mix(in srgb, var(--accent) 25%, var(--bg2)));
+  color: #fff6dc;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, .55), 0 0 12px color-mix(in srgb, var(--accent) 70%, transparent);
+}
+#action-pips .action-pip.is-picked::after { border-top-color: var(--accent2); }
+#action-pips .action-pip.is-picked > *,
+#action-pips .action-pip.is-fired > *,
+#action-pips .action-pip.is-off > * { animation: none; }
+#action-pips .action-pip.is-fired {
+  border-color: #6c6c70; background: #2a2a2e; color: #9a9aa0; box-shadow: 0 2px 5px rgba(0, 0, 0, .5);
+  text-decoration: line-through;
+}
+#action-pips .action-pip.is-fired::after { border-top-color: #6c6c70; }
+#action-pips .action-pip.is-off { opacity: .55; border-style: dashed; }
+/* A destroyed gun: grey, struck through and dimmer than one that has merely fired, and
+   it takes no hover — it will never fire again. */
+#action-pips .action-pip.is-destroyed {
+  border-color: #56565a; background: #1e1e21; color: #7a7a80; opacity: .7;
+  text-decoration: line-through; box-shadow: none; cursor: not-allowed;
+}
+#action-pips .action-pip.is-destroyed > * { animation: none; }
+#action-pips .action-pip.is-destroyed::after { border-top-color: #56565a; }
+/* THE AIMING PIPS: a weapon pip per special
+   weapon a model holds, labelled with the step it strikes at; then a round pip per attack, empty beside the
+   character, filled on the model it is aimed at. Gold, as the character's ring is; LAST in red. */
+#action-pips .action-pip.weapon-pip { border-color: #f2d672; background: #0d0d0f; color: #f2d672; padding: .2rem .55rem; }
+#action-pips .action-pip.weapon-pip::after { border-top-color: #f2d672; }
+#action-pips .action-pip.weapon-pip:hover { background: #3a3320; }
+#action-pips .action-pip.weapon-pip.is-picked { background: #f2d672; color: #0d0d0f; }
+#action-pips .action-pip.weapon-pip .step { font-size: 11px; padding: 0 .35em; border: 1px solid currentColor; border-radius: 3px; }
+#action-pips .action-pip.weapon-pip.last { border-color: #ff8c6a; color: #ff8c6a; }
+#action-pips .action-pip.weapon-pip.last::after { border-top-color: #ff8c6a; }
+#action-pips .action-pip.weapon-pip.last.is-picked { background: #ff8c6a; color: #0d0d0f; }
+#action-pips .action-pip.normal-pip { border-color: #b8b6ad; background: #26262c; color: #f0eee6; }
+#action-pips .action-pip.normal-pip::after { border-top-color: #b8b6ad; }
+#action-pips .action-pip.normal-pip.is-picked { background: #3a3a40; color: #fff; }
+/* ALLOCATING: after the weapon, Fight normally (grey) or Allocate (green, the colour the models he may hit turn);
+   while allocating, Fight in gold, dashed and dim until every attack is given; Change weapon small and quiet. */
+#action-pips .action-pip.allocate-pip { border-color: #4dff6a; background: #133a1a; color: #c8ffd2; }
+#action-pips .action-pip.allocate-pip::after { border-top-color: #4dff6a; }
+/* WHOSE QUESTION: the Allocate pip and the
+   models it turns in the asking side's colour, and a label leading the pips, "BLUE · Captain". */
+#action-pips .action-pip.allocate-pip.blue { border-color: #4fc3ff; background: #0f2c40; color: #d6f1ff; }
+#action-pips .action-pip.allocate-pip.blue::after { border-top-color: #4fc3ff; }
+#action-pips .action-pip.allocate-pip.red { border-color: #ffa030; background: #40250c; color: #ffe6c4; }
+#action-pips .action-pip.allocate-pip.red::after { border-top-color: #ffa030; }
+#action-pips .action-pip.team-pip { cursor: default; font-size: 14px; letter-spacing: .8px; border-width: 2px; }
+#action-pips .action-pip.team-pip > * { animation: none; }
+#action-pips .action-pip.team-pip.blue,
+#action-pips .action-pip.team-pip.blue:hover { border-color: #4fc3ff; background: #4fc3ff; color: #06131c; }
+#action-pips .action-pip.team-pip.red,
+#action-pips .action-pip.team-pip.red:hover { border-color: #ffa030; background: #ffa030; color: #1c0e02; }
+#action-pips .action-pip.team-pip.blue::after { border-top-color: #4fc3ff; }
+#action-pips .action-pip.team-pip.red::after { border-top-color: #ffa030; }
+#action-pips .action-pip.fight-pip { border-color: #f2d672; background: #f2d672; color: #0d0d0f; }
+#action-pips .action-pip.fight-pip::after { border-top-color: #f2d672; }
+#action-pips .action-pip.fight-pip.waiting { border-style: dashed; background: #3a3320; color: #f2d672; opacity: .85; }
+/* the aimer's weapon switch: one pip naming the weapon held, click to swap; red-orange when it strikes last */
+#action-pips .action-pip.weapon-switch-pip { border-color: #f2d672; background: #0d0d0f; color: #f2d672; }
+#action-pips .action-pip.weapon-switch-pip::after { border-top-color: #f2d672; }
+#action-pips .action-pip.weapon-switch-pip:hover { background: #3a3320; }
+#action-pips .action-pip.weapon-switch-pip .step { font-size: 11px; padding: 0 .35em; border: 1px solid currentColor; border-radius: 3px; }
+#action-pips .action-pip.weapon-switch-pip.last { border-color: #ff8c6a; color: #ff8c6a; }
+#action-pips .action-pip.weapon-switch-pip.last::after { border-top-color: #ff8c6a; }
+#action-pips .pip-lines { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+#action-pips .pip-line, #action-pips .pip-drag-line { stroke: #f2d672; stroke-width: 1.6; stroke-dasharray: 5 3; opacity: .85; }
+#aim-hint { color: var(--muted); font-size: 12px; }
+#aim-hint #aim-status { font-size: 0.8rem; color: #e8e6df; margin-right: 0.5rem; }
+#aim-hint #aim-keys { font-size: 0.75rem; color: #9aa4b2; }
+#action-pips .action-pip svg {
+  width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.9;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+html.light #action-pips .action-pip { color: #10300e; }
+/* ...but not the aiming pips, which carry their own dark fills: dark green on them was unreadable */
+html.light #action-pips .action-pip.weapon-pip { color: #f2d672; }
+html.light #action-pips .action-pip.weapon-pip.last { color: #ff8c6a; }
+html.light #action-pips .action-pip.weapon-pip.is-picked { color: #0d0d0f; }
+html.light #action-pips .action-pip.normal-pip { color: #f0eee6; }
+html.light #action-pips .action-pip.weapon-switch-pip { color: #f2d672; }
+html.light #action-pips .action-pip.weapon-switch-pip.last { color: #ff8c6a; }
+html.light #action-pips .action-pip.allocate-pip { color: #c8ffd2; }
+html.light #action-pips .action-pip.allocate-pip.blue { color: #d6f1ff; }
+html.light #action-pips .action-pip.allocate-pip.red { color: #ffe6c4; }
+html.light #action-pips .action-pip.team-pip.blue { color: #06131c; }
+html.light #action-pips .action-pip.team-pip.red { color: #1c0e02; }
+html.light #action-pips .action-pip.fight-pip { color: #0d0d0f; }
+html.light #action-pips .action-pip.fight-pip.waiting { color: #f2d672; }
+/* What the pip does and the rule behind it, shown under the pip where the pointer is. */
+#pip-tip {
+  position: absolute; z-index: 4; max-width: 18rem;
+  padding: .35rem .55rem; border-radius: 4px;
+  background: rgba(0, 0, 0, .85); border: 1px solid var(--border2);
+  color: var(--text); font-size: 12.5px; line-height: 1.3;
+  pointer-events: none;
+}
+#pip-tip[hidden] { display: none; }
+#pip-tip b {
+  display: block; font-family: var(--label); font-size: 13px; letter-spacing: .4px;
+  text-transform: uppercase; color: var(--accent2);
+}
+
+/* THE CONTROLLER'S LETTERS: X, Y and B on the three pips nearest the controller cursor.
+   Absolutely placed so the pip keeps the width actionPips.js measured; shown only while the
+   controller has the turn (html.pad-turn). Xbox colours. */
+#action-pips .action-pip > .pad-badge {
+  position: absolute; left: -9px; top: -9px;
+  width: 18px; height: 18px; border-radius: 50%;
+  display: none; align-items: center; justify-content: center;
+  font: 800 11px/1 var(--label); letter-spacing: 0; color: #fff;
+  border: 1.5px solid rgba(0, 0, 0, .65);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, .6);
+  pointer-events: none; animation: none;
+}
+html.pad-turn #action-pips .action-pip > .pad-badge { display: flex; }
+#action-pips .action-pip > .pad-badge[data-letter="X"] { background: #2f6fd6; }
+#action-pips .action-pip > .pad-badge[data-letter="Y"] { background: #e2b31c; color: #1d1600; }
+#action-pips .action-pip > .pad-badge[data-letter="B"] { background: #d23b32; }

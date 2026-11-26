@@ -1,5 +1,7 @@
 # VOID WARS: Fleets
 
+**Play it in your browser: https://tylenrahl.github.io/void-wars-fleets/**
+
 A turn-based fleet battle game for two players at one keyboard, played in the browser. Fleets of starships, or
 of sailing ships in the sea skin *Tides of the Archipelago*, manoeuvre, fire broadsides, launch attack craft
 and board each other. Distances are in centimetres on a virtual table; every result comes from six-sided dice. The
